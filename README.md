@@ -2,8 +2,8 @@
 
 **Keyer** — это современная и легковесная библиотека для работы с системными хранилищами паролей напрямую из Java.
 
-[![Java Version](https://shields.io)](https://java.net)
-[![License](https://shields.io)](LICENSE)
+![Java Version](https://img.shields.io/badge/Java-25%2B-blue)
+![License](https://img.shields.io/badge/License-Public%20Domain-blue)
 
 ## Особенности
 
