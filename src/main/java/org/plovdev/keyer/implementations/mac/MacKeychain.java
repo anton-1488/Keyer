@@ -70,7 +70,6 @@ public class MacKeychain implements Keychain {
             MAC_OS_KEYCHAIN_NATIVE.setPassword(appId, alias, newPassword);
             return true;
         } catch (Exception e) {
-            log.error("Failed to set password for alias: {}", alias, e);
             return false;
         }
     }
@@ -87,7 +86,6 @@ public class MacKeychain implements Keychain {
             MAC_OS_KEYCHAIN_NATIVE.deletePassword(appId, alias);
             return true;
         } catch (Exception e) {
-            log.error("Failed to delete password for alias: {}", alias, e);
             return false;
         }
     }
