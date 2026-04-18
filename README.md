@@ -26,3 +26,5 @@ char[] password = keychain.getPassword(alias); // get password
 ```
 
 ### See also examples and tests
+
+# DO NOT FORGET ADD --enable-native-access=ALL-UNNAMED TO VM-OPTIONS:)
