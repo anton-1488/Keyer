@@ -5,21 +5,21 @@ import org.plovdev.keyer.Keychain;
 public class UnixKeychain implements Keychain {
     @Override
     public void init(String appId) {
-
+        throw new UnsupportedOperationException("Unix systems not implementated yet!");
     }
 
     @Override
     public char[] getPassword(String alias) {
-        return new char[0];
+        throw new UnsupportedOperationException("Unix systems not implementated yet!");
     }
 
     @Override
     public boolean setPassword(String alias, char[] newPassword) {
-        return false;
+        throw new UnsupportedOperationException("Unix systems not implementated yet!");
     }
 
     @Override
     public boolean deletePassword(String alias) {
-        return false;
+        throw new UnsupportedOperationException("Unix systems not implementated yet!");
     }
 }

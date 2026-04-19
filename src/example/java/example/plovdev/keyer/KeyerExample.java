@@ -22,8 +22,8 @@ import java.util.Objects;
  * @author Anton
  * @version 1.0
  */
-public class KeyyerExample {
-    private static final Logger log = LoggerFactory.getLogger(KeyyerExample.class);
+public class KeyerExample {
+    private static final Logger log = LoggerFactory.getLogger(KeyerExample.class);
 
     /**
      * Executes the keychain demonstration.

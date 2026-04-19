@@ -28,7 +28,11 @@ public class WindowsKeychain implements Keychain {
     @Override
     public synchronized char[] getPassword(String alias) {
         checkIfInited();
-        return WIN_OS_KEYCHAIN_NATIVE.getPassword(appId, alias);
+        try {
+            return WIN_OS_KEYCHAIN_NATIVE.getPassword(appId, alias);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Override

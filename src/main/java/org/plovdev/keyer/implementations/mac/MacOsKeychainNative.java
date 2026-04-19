@@ -1,16 +1,15 @@
 package org.plovdev.keyer.implementations.mac;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.plovdev.keyer.utils.NativeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+
+import static org.plovdev.keyer.utils.NativeUtils.find;
 
 /**
  * Low-level native bridge for macOS Keychain access using Project Panama.
@@ -45,23 +44,10 @@ public final class MacOsKeychainNative {
      */
     private static final SymbolLookup SECURITY = SymbolLookup.libraryLookup("/System/Library/Frameworks/Security.framework/Versions/A/Security", SHARED);
 
-    private static final MethodHandle ADD_PASSWORD = find(ADD_PASSWORD_METHOD_NAME, FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-    private static final MethodHandle GET_PASSWORD = find(GET_PASSWORD_METHOD_NAME, FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-    private static final MethodHandle DELETE_PASSWORD = find(DELETE_PASSWORD_METHOD_NAME, FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
-    private static final MethodHandle CLEAN_PASSWORD = find(CLEAN_PASSWORD_METHOD_NAME, FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-    /**
-     * Finds and links a native function by name.
-     *
-     * @param name native function name
-     * @param desc function signature descriptor
-     * @return linked MethodHandle
-     * @throws java.util.NoSuchElementException if the symbol is not found
-     */
-    private static @NotNull MethodHandle find(String name, FunctionDescriptor desc) {
-        return SECURITY.find(name).map(s -> LINKER.downcallHandle(s, desc)).orElseThrow();
-    }
-
+    private static final MethodHandle ADD_PASSWORD = find(SECURITY, LINKER, ADD_PASSWORD_METHOD_NAME, FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+    private static final MethodHandle GET_PASSWORD = find(SECURITY, LINKER, GET_PASSWORD_METHOD_NAME, FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+    private static final MethodHandle DELETE_PASSWORD = find(SECURITY, LINKER, DELETE_PASSWORD_METHOD_NAME, FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+    private static final MethodHandle CLEAN_PASSWORD = find(SECURITY, LINKER, CLEAN_PASSWORD_METHOD_NAME, FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
     /**
      * Fetches a password from the Keychain.
      *
@@ -78,15 +64,14 @@ public final class MacOsKeychainNative {
             MemorySegment dataPtr = arena.allocate(ValueLayout.ADDRESS);
 
             int status = (int) GET_PASSWORD.invokeExact(MemorySegment.NULL, (int) appSegment.byteSize() - 1, appSegment, (int) aliasSegment.byteSize() - 1, aliasSegment, lenPtr, dataPtr, MemorySegment.NULL);
+            log.trace("Password getting status: {}", status);
             if (status != 0) return null;
 
             MemorySegment passwordData = dataPtr.get(ValueLayout.ADDRESS, 0).reinterpret(lenPtr.get(ValueLayout.JAVA_INT, 0));
             byte[] bytes = passwordData.toArray(ValueLayout.JAVA_BYTE);
-            char[] password = bytesToChars(bytes);
+            char[] password = NativeUtils.bytesToCharsUTF_8(bytes);
 
-            int getStatus = (int) CLEAN_PASSWORD.invokeExact(MemorySegment.NULL, passwordData);
-            log.trace("Password getting status: {}", getStatus);
-
+            int cleanStatus = (int) CLEAN_PASSWORD.invokeExact(MemorySegment.NULL, passwordData);
             Arrays.fill(bytes, (byte) 0);
             return password;
         } catch (Throwable t) {
@@ -111,7 +96,7 @@ public final class MacOsKeychainNative {
         try (var arena = Arena.ofConfined()) {
             var s = arena.allocateFrom(app);
             var a = arena.allocateFrom(alias);
-            byte[] passBytes = charsToBytes(newPassword);
+            byte[] passBytes = NativeUtils.charsUTF_8ToBytes(newPassword);
             var p = arena.allocateFrom(ValueLayout.JAVA_BYTE, passBytes);
 
             int status = (int) ADD_PASSWORD.invokeExact(MemorySegment.NULL, (int) s.byteSize() - 1, s, (int) a.byteSize() - 1, a, (int) p.byteSize(), p, MemorySegment.NULL);
@@ -143,25 +128,5 @@ public final class MacOsKeychainNative {
         } catch (Throwable t) {
             throw new RuntimeException("Error to delete password");
         }
-    }
-
-    /**
-     * Converts a char array to a UTF-8 byte array.
-     */
-    private byte @NotNull [] charsToBytes(char[] chars) {
-        ByteBuffer bb = StandardCharsets.UTF_8.encode(CharBuffer.wrap(chars));
-        byte[] bytes = new byte[bb.remaining()];
-        bb.get(bytes);
-        return bytes;
-    }
-
-    /**
-     * Converts a UTF-8 byte array to a char array.
-     */
-    private char @NotNull [] bytesToChars(byte[] bytes) {
-        CharBuffer cb = StandardCharsets.UTF_8.decode(ByteBuffer.wrap(bytes));
-        char[] chars = new char[cb.remaining()];
-        cb.get(chars);
-        return chars;
     }
 }
