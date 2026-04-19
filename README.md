@@ -12,7 +12,16 @@
 - **Кроссплатформенность**: Единый интерфейс для macOS, Windows и Linux.
 - **Zero Dependencies**: Только стандартная JDK, SLF4J для логирования и JUnit для тестов.
 
-## 🚀 Быстрый старт
+## Доступно на Maven central
+```xml
+<dependency>
+    <groupId>io.github.anton-1488</groupId>
+    <artifactId>Keyer</artifactId>
+    <version>1.0</version>
+</dependency>
+```
+
+## Быстрый старт
 
 ### Инициализация
 
