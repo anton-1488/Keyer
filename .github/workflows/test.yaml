@@ -23,17 +23,23 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Libsecret
+      - name: Libsecret (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y libsecret-1-dev gnome-keyring dbus-x11
-          echo -n "test" | gnome-keyring-daemon --unlock
 
-      - name: Test
+      - name: Test (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
         run: |
-          if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-            dbus-run-session -- mvn test -DargLine="--enable-native-access=ALL-UNNAMED"
-          else
+          dbus-run-session -- bash -e << 'EOF'
+            eval $(gnome-keyring-daemon --start)
+            export GNOME_KEYRING_CONTROL
+            export SSH_AUTH_SOCK
+            echo -n "test" | gnome-keyring-daemon --unlock
             mvn test -DargLine="--enable-native-access=ALL-UNNAMED"
-          fi
+          EOF
+
+      - name: Test (macOS/Windows)
+        if: matrix.os != 'ubuntu-latest'
+        run: mvn test -DargLine="--enable-native-access=ALL-UNNAMED"
