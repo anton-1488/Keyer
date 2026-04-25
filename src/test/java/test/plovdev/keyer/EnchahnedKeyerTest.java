@@ -42,6 +42,6 @@ public class EnchahnedKeyerTest {
     @Test
     void testDeleteNonExistent() {
         boolean result = keychain.deletePassword(ALIAS);
-        assertFalse(result); // not found
+        assertTrue(result); // not found
     }
 }

@@ -37,25 +37,13 @@ public interface Keychain {
      */
     static @NotNull Keychain getKeychain(String appId) {
         Platform platform = PlatformUtils.guessPlatform();
-        Keychain keychain = switch (platform) {
-            case WINDOWS -> new WindowsKeychain();
-            case MAC -> new MacKeychain();
-            case UNIX -> new UnixKeychain();
+        return switch (platform) {
+            case WINDOWS -> new WindowsKeychain(appId);
+            case MAC -> new MacKeychain(appId);
+            case UNIX -> new UnixKeychain(appId);
             default -> throw new IllegalArgumentException("Platform " + platform.name() + " not supported");
         };
-        keychain.init(appId);
-        return keychain;
     }
-
-    /**
-     * Initializes the keychain implementation.
-     * <p>
-     * This method is called internally by the factory method. It sets the
-     * application context used for all subsequent operations.
-     *
-     * @param appId the unique application or service identifier.
-     */
-    void init(String appId);
 
     /**
      * Retrieves a password from the native store.

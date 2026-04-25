@@ -48,6 +48,8 @@ public final class MacOsKeychainNative {
     private static final MethodHandle GET_PASSWORD = find(SECURITY, LINKER, GET_PASSWORD_METHOD_NAME, FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
     private static final MethodHandle DELETE_PASSWORD = find(SECURITY, LINKER, DELETE_PASSWORD_METHOD_NAME, FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
     private static final MethodHandle CLEAN_PASSWORD = find(SECURITY, LINKER, CLEAN_PASSWORD_METHOD_NAME, FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+    private static final MethodHandle CF_RELEASE = find(SECURITY, LINKER, "CFRelease", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
+
     /**
      * Fetches a password from the Keychain.
      *
@@ -75,7 +77,7 @@ public final class MacOsKeychainNative {
             Arrays.fill(bytes, (byte) 0);
             return password;
         } catch (Throwable t) {
-            throw new RuntimeException("Error to get password: ");
+            throw new RuntimeException("Error to get password: ", t);
         }
     }
 
@@ -91,18 +93,23 @@ public final class MacOsKeychainNative {
         try {
             deletePassword(app, alias);
         } catch (Throwable t) {
-            log.debug("Error to clean password defore setting: ", t);
+            log.debug("No existing password to delete or error: {}", t.getMessage());
         }
+
         try (var arena = Arena.ofConfined()) {
             var s = arena.allocateFrom(app);
             var a = arena.allocateFrom(alias);
             byte[] passBytes = NativeUtils.charsUTF_8ToBytes(newPassword);
             var p = arena.allocateFrom(ValueLayout.JAVA_BYTE, passBytes);
 
-            int status = (int) ADD_PASSWORD.invokeExact(MemorySegment.NULL, (int) s.byteSize() - 1, s, (int) a.byteSize() - 1, a, (int) p.byteSize(), p, MemorySegment.NULL);
+            int status = (int) ADD_PASSWORD.invokeExact(MemorySegment.NULL, (int) s.byteSize() - 1, s, (int) a.byteSize() - 1, a, passBytes.length, p, MemorySegment.NULL);
             Arrays.fill(passBytes, (byte) 0);
+
+            if (status != 0) {
+                throw new RuntimeException("SecKeychainAddGenericPassword failed with status: " + status);
+            }
         } catch (Throwable t) {
-            throw new RuntimeException("Cann't set password");
+            throw new RuntimeException("Cann't set password: ", t);
         }
     }
 
@@ -117,16 +124,22 @@ public final class MacOsKeychainNative {
         try (var arena = Arena.ofConfined()) {
             var s = arena.allocateFrom(app);
             var a = arena.allocateFrom(alias);
-            var itemRef = arena.allocate(ValueLayout.ADDRESS);
+            var itemRefPtr = arena.allocate(ValueLayout.ADDRESS);
 
-            int status = (int) GET_PASSWORD.invokeExact(MemorySegment.NULL, (int) s.byteSize() - 1, s, (int) a.byteSize() - 1, a, MemorySegment.NULL, MemorySegment.NULL, itemRef);
+            int status = (int) GET_PASSWORD.invokeExact(MemorySegment.NULL, (int) s.byteSize() - 1, s, (int) a.byteSize() - 1, a, MemorySegment.NULL, MemorySegment.NULL, itemRefPtr);
             if (status == 0) {
-                int delStatus = (int) DELETE_PASSWORD.invokeExact(itemRef.get(ValueLayout.ADDRESS, 0));
+                MemorySegment itemRef = itemRefPtr.get(ValueLayout.ADDRESS, 0);
+                try {
+                    int delStatus = (int) DELETE_PASSWORD.invokeExact(itemRef);
+                } finally {
+                    CF_RELEASE.invokeExact(itemRef);
+                }
             } else {
+                if (status == -25300) return;
                 throw new RuntimeException("Unable to delete password, status: " + status);
             }
         } catch (Throwable t) {
-            throw new RuntimeException("Error to delete password");
+            throw new RuntimeException("Error to delete password: ", t);
         }
     }
 }
