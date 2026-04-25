@@ -26,7 +26,9 @@ jobs:
       - name: Libsecret
         if: matrix.os == 'ubuntu-latest'
         run: |
-          sudo apt-get update && sudo apt-get install -y libsecret-1-dev
+          sudo apt-get update
+          sudo apt-get install -y libsecret-1-dev gnome-keyring dbus-x11
+          echo -n "test" | gnome-keyring-daemon --unlock
 
       - name: Test
         run: |
