@@ -27,7 +27,7 @@ public final class UnixOsKeychainNative {
     private static final SymbolLookup SECRET;
 
     static {
-        String[] possiblePaths = {"libsecret-1.so", "libsecret-1.so.0", "/usr/lib/libsecret-1.so", "/usr/lib/x86_64-linux-gnu/libsecret-1.so", "/usr/lib64/libsecret-1.so"};
+        String[] possiblePaths = {"libsecret-1.so", "libsecret-1.so.0", "libsecret-1.so.0.0.0", "/usr/lib/libsecret-1.so", "/usr/lib/x86_64-linux-gnu/libsecret-1.so", "/usr/lib/x86_64-linux-gnu/libsecret-1.so.0", "/usr/lib/x86_64-linux-gnu/libsecret-1.so.0.0.0", "/usr/lib64/libsecret-1.so", "/usr/lib/aarch64-linux-gnu/libsecret-1.so"};
 
         SymbolLookup lookup = null;
         for (String path : possiblePaths) {
@@ -64,7 +64,7 @@ public final class UnixOsKeychainNative {
         }
     }
 
-    public char [] getPassword(String app, String alias) {
+    public char[] getPassword(String app, String alias) {
         try (var arena = Arena.ofConfined()) {
             MemorySegment errorPtr = arena.allocate(ValueLayout.ADDRESS);
             MemorySegment passwordSegment = (MemorySegment) SECRET_PASSWORD_LOOKUP_SYNC.invokeExact(
@@ -88,6 +88,7 @@ public final class UnixOsKeychainNative {
                 size++;
             }
             MemorySegment readable = passwordSegment.reinterpret(size);
+
             byte[] rawBytes = new byte[(int) size];
             MemorySegment.copy(readable, ValueLayout.JAVA_BYTE, 0, rawBytes, 0, (int) size);
 
@@ -135,7 +136,6 @@ public final class UnixOsKeychainNative {
         }
     }
 
-
     public void deletePassword(String app, String alias) {
         try (var arena = Arena.ofConfined()) {
             MemorySegment errorPtr = arena.allocate(ValueLayout.ADDRESS);
@@ -150,9 +150,14 @@ public final class UnixOsKeychainNative {
                     MemorySegment.NULL
             );
 
-            MemorySegment errorSegment = errorPtr.get(ValueLayout.ADDRESS, 0);
             log.debug("Deleting success: {}", success);
-            if (!errorSegment.equals(MemorySegment.NULL)) {
+
+            if (!success) {
+                MemorySegment errorSegment = errorPtr.get(ValueLayout.ADDRESS, 0);
+                if (errorSegment.address() != 0) {
+                    // Можно прочитать сообщение об ошибке, но это сложнее
+                    throw new RuntimeException("Failed to delete password");
+                }
                 throw new RuntimeException("Failed to delete password");
             }
         } catch (Throwable t) {
