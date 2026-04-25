@@ -7,7 +7,7 @@
     <groupId>io.github.anton-1488</groupId>
     <artifactId>Keyer</artifactId>
     <name>Keyer</name>
-    <version>1.0</version>
+    <version>1.5</version>
     <description>Keyer - Lightweight Native Keychain Access for Java</description>
     <url>https://github.com/anton-1488/Keyer</url>
 
