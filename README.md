@@ -17,7 +17,7 @@
 <dependency>
     <groupId>io.github.anton-1488</groupId>
     <artifactId>Keyer</artifactId>
-    <version>1.0</version>
+    <version>1.5</version>
 </dependency>
 ```
 
