@@ -1,8 +1,5 @@
 package org.plovdev.keyer.implementations.win;
 
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.plovdev.keyer.utils.NativeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,14 +39,12 @@ public final class WinOsKeychainNative {
             ValueLayout.ADDRESS.withName("CredentialBlob"),
             ValueLayout.JAVA_INT.withName("Persist"),
             ValueLayout.JAVA_INT.withName("AttributeCount"),
-            MemoryLayout.paddingLayout(4),
             ValueLayout.ADDRESS.withName("Attributes"),
             ValueLayout.ADDRESS.withName("TargetAlias"),
             ValueLayout.ADDRESS.withName("UserName")
-    ).withByteAlignment(8);
+    );
 
-    @Contract(value = "_, _ -> new", pure = true)
-    public char @Nullable [] getPassword(String appId, String alias) {
+    public char[] getPassword(String appId, String alias) {
         try (var arena = Arena.ofConfined()) {
             MemorySegment targetSegment = arena.allocateFrom(formTargetName(appId, alias), StandardCharsets.UTF_16LE);
             MemorySegment credPtrSegment = arena.allocate(ValueLayout.ADDRESS);
@@ -122,9 +117,6 @@ public final class WinOsKeychainNative {
         }
     }
 
-
-    @Contract(pure = true)
-    @NotNull
     private static String formTargetName(String app, String alias) {
         return app + ":" + alias + "\0";
     }

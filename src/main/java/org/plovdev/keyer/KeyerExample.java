@@ -1,6 +1,5 @@
-package example.plovdev.keyer;
+package org.plovdev.keyer;
 
-import org.plovdev.keyer.Keychain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

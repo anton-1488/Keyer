@@ -1,6 +1,5 @@
 package org.plovdev.keyer.implementations.mac;
 
-import org.jetbrains.annotations.Nullable;
 import org.plovdev.keyer.utils.NativeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +57,7 @@ public final class MacOsKeychainNative {
      * @return password as char array, or null if not found
      * @throws RuntimeException if a native call fails unexpectedly
      */
-    public char @Nullable [] getPassword(String app, String alias) {
+    public char [] getPassword(String app, String alias) {
         try (var arena = Arena.ofConfined()) {
             MemorySegment appSegment = arena.allocateFrom(app);
             MemorySegment aliasSegment = arena.allocateFrom(alias);

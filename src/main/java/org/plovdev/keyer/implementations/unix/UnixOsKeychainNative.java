@@ -1,6 +1,5 @@
 package org.plovdev.keyer.implementations.unix;
 
-import org.jetbrains.annotations.Nullable;
 import org.plovdev.keyer.utils.NativeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,15 +55,16 @@ public final class UnixOsKeychainNative {
     private static final MemorySegment schemaRef;
 
     static {
-        try (var tempArena = Arena.ofConfined()) {
-            MemorySegment nameSegment = tempArena.allocateFrom(SCHEMA_NAME);
+        MemorySegment nameSegment = SHARED.allocateFrom(SCHEMA_NAME);
+        try {
             schemaRef = (MemorySegment) SECRET_SCHEMA_NEW.invokeExact(nameSegment, 0);
+            log.info("Secret schema created successfully");
         } catch (Throwable t) {
             throw new RuntimeException("Failed to create secret schema", t);
         }
     }
 
-    public char @Nullable [] getPassword(String app, String alias) {
+    public char [] getPassword(String app, String alias) {
         try (var arena = Arena.ofConfined()) {
             MemorySegment errorPtr = arena.allocate(ValueLayout.ADDRESS);
             MemorySegment passwordSegment = (MemorySegment) SECRET_PASSWORD_LOOKUP_SYNC.invokeExact(
@@ -83,14 +83,14 @@ public final class UnixOsKeychainNative {
                 return null;
             }
 
-            MemorySegment readable = passwordSegment.reinterpret(Long.MAX_VALUE);
-            int length = 0;
-            while (readable.get(ValueLayout.JAVA_BYTE, length) != 0) {
-                length++;
+            long size = 0;
+            while (passwordSegment.get(ValueLayout.JAVA_BYTE, size) != 0) {
+                size++;
             }
+            MemorySegment readable = passwordSegment.reinterpret(size);
+            byte[] rawBytes = new byte[(int) size];
+            MemorySegment.copy(readable, ValueLayout.JAVA_BYTE, 0, rawBytes, 0, (int) size);
 
-            byte[] rawBytes = new byte[length];
-            MemorySegment.copy(readable, ValueLayout.JAVA_BYTE, 0, rawBytes, 0, length);
             char[] password = NativeUtils.bytesToCharsUTF_8(rawBytes);
             Arrays.fill(rawBytes, (byte) 0);
             G_FREE.invokeExact(passwordSegment);

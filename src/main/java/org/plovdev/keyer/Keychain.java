@@ -1,7 +1,5 @@
 package org.plovdev.keyer;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.plovdev.keyer.implementations.mac.MacKeychain;
 import org.plovdev.keyer.implementations.unix.UnixKeychain;
 import org.plovdev.keyer.implementations.win.WindowsKeychain;
@@ -35,7 +33,7 @@ public interface Keychain {
      * @return a thread-safe {@link Keychain} instance for the detected OS.
      * @throws IllegalArgumentException if the current platform is not supported.
      */
-    static @NotNull Keychain getKeychain(String appId) {
+    static Keychain getKeychain(String appId) {
         Platform platform = PlatformUtils.guessPlatform();
         return switch (platform) {
             case WINDOWS -> new WindowsKeychain(appId);
@@ -55,7 +53,7 @@ public interface Keychain {
      * @return a {@code char[]} containing the password, or {@code null} if the
      * alias was not found or an error occurred.
      */
-    char @Nullable [] getPassword(String alias);
+    char[] getPassword(String alias);
 
     /**
      * Saves or updates a password in the native store.
