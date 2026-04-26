@@ -7,7 +7,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.plovdev.keyer.Keychain;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class SimpleKeyerTest {
@@ -19,8 +19,7 @@ public class SimpleKeyerTest {
     @Order(1)
     @Test
     void testSetPassword() {
-        boolean setted = keychain.setPassword(ALIAS, "password".toCharArray());
-        assertTrue(setted);
+        assertDoesNotThrow(() -> keychain.setPassword(ALIAS, "password".toCharArray()));
     }
 
     @Order(2)
@@ -33,7 +32,6 @@ public class SimpleKeyerTest {
     @Order(3)
     @Test
     void testDeletePassword() {
-        boolean deleted = keychain.deletePassword(ALIAS);
-        assertTrue(deleted);
+        assertDoesNotThrow(() -> keychain.deletePassword(ALIAS));
     }
 }

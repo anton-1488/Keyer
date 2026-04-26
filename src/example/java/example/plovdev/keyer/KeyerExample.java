@@ -1,5 +1,6 @@
-package org.plovdev.keyer;
+package example.plovdev.keyer;
 
+import org.plovdev.keyer.Keychain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +20,8 @@ import java.util.Objects;
  * available in Java 25 versions.</p>
  *
  * @author Anton
- * @version 1.0
+ * @version 1.6
+ * @since 1.0
  */
 public class KeyerExample {
     private static final Logger log = LoggerFactory.getLogger(KeyerExample.class);
@@ -37,13 +39,12 @@ public class KeyerExample {
         String alias = "wallet1";
 
         // 2. Set a new password
-        boolean setted = keychain.setPassword(alias, "123".toCharArray());
-        log.info("Password setted: {}", setted);
+        keychain.setPassword(alias, "123".toCharArray());
 
         // 3. Retrieve the password
         char[] password = keychain.getPassword(alias);
 
-        // 4. Log the result (using Objects.requireNonNull to handle null safety)
+        // 4. Log the result
         log.info("Getted password: {}", new String(Objects.requireNonNull(password)));
     }
 }

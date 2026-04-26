@@ -1,9 +1,9 @@
 package org.plovdev.keyer;
 
+import org.jspecify.annotations.NonNull;
 import org.plovdev.keyer.implementations.mac.MacKeychain;
 import org.plovdev.keyer.implementations.unix.UnixKeychain;
 import org.plovdev.keyer.implementations.win.WindowsKeychain;
-import org.plovdev.keyer.utils.PlatformUtils;
 
 /**
  * A unified interface for accessing native system keychains.
@@ -13,14 +13,15 @@ import org.plovdev.keyer.utils.PlatformUtils;
  * <ul>
  *     <li><b>macOS:</b> Apple Keychain</li>
  *     <li><b>Windows:</b> Windows Credential Manager</li>
- *     <li><b>Unix:</b> Secret Service API)</li>
+ *     <li><b>Unix:</b> Secret Service API</li>
  * </ul>
  * <p>
  * It uses the Project Panama for high-performance
  * native calls without external dependencies.
  *
  * @author Anton
- * @version 1.0
+ * @since 1.0
+ * @version 1.6
  */
 public interface Keychain {
     /**
@@ -33,8 +34,8 @@ public interface Keychain {
      * @return a thread-safe {@link Keychain} instance for the detected OS.
      * @throws IllegalArgumentException if the current platform is not supported.
      */
-    static Keychain getKeychain(String appId) {
-        Platform platform = PlatformUtils.guessPlatform();
+    static @NonNull Keychain getKeychain(String appId) {
+        Platform platform = Platform.guessPlatform();
         return switch (platform) {
             case WINDOWS -> new WindowsKeychain(appId);
             case MAC -> new MacKeychain(appId);
@@ -62,9 +63,8 @@ public interface Keychain {
      *
      * @param alias       the name or account identifier to associate the password with.
      * @param newPassword the password to be stored.
-     * @return {@code true} if the password was successfully saved, {@code false} otherwise.
      */
-    boolean setPassword(String alias, char[] newPassword);
+    void setPassword(String alias, char[] newPassword);
 
     /**
      * Deletes a password from the native store.
@@ -72,8 +72,6 @@ public interface Keychain {
      * If the password does not exist, the operation is considered successful.
      *
      * @param alias the name or account identifier of the password to remove.
-     * @return {@code true} if the deletion was successful or the item was not found,
-     * {@code false} if a system error occurred.
      */
-    boolean deletePassword(String alias);
+    void deletePassword(String alias);
 }

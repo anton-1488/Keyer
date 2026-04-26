@@ -1,6 +1,9 @@
 package test.plovdev.keyer;
 
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.plovdev.keyer.Keychain;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -25,8 +28,8 @@ public class EnchahnedKeyerTest {
         char[] firstPass = "first_pass".toCharArray();
         char[] secondPass = "second_pass".toCharArray();
 
-        assertTrue(keychain.setPassword(ALIAS, firstPass));
-        assertTrue(keychain.setPassword(ALIAS, secondPass));
+        assertDoesNotThrow(() -> keychain.setPassword(ALIAS, firstPass));
+        assertDoesNotThrow(() -> keychain.setPassword(ALIAS, secondPass));
 
         assertArrayEquals(secondPass, keychain.getPassword(ALIAS));
     }
@@ -34,14 +37,13 @@ public class EnchahnedKeyerTest {
     @Order(3)
     @Test
     void testDeleteAndVerify() {
-        assertTrue(keychain.deletePassword(ALIAS));
+        assertDoesNotThrow(() -> keychain.deletePassword(ALIAS));
         assertNull(keychain.getPassword(ALIAS));
     }
 
     @Order(4)
     @Test
     void testDeleteNonExistent() {
-        boolean result = keychain.deletePassword(ALIAS);
-        assertTrue(result); // not found
+        assertDoesNotThrow(() -> keychain.deletePassword(ALIAS));
     }
 }

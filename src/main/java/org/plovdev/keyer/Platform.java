@@ -8,7 +8,8 @@ package org.plovdev.keyer;
  * native implementation for secure storage.
  *
  * @author Anton
- * @version 1.0
+ * @since 1.0
+ * @version 1.6
  */
 public enum Platform {
     /**
@@ -32,5 +33,29 @@ public enum Platform {
     /**
      * Any other operating system that is not officially supported by Keyer.
      */
-    OTHER
+    OTHER;
+
+    /**
+     * Detects the current operating system based on the {@code "os.name"} system property.
+     * <p>
+     * Supported platforms include:
+     * <ul>
+     *     <li>{@link Platform#MAC} - for macOS systems</li>
+     *     <li>{@link Platform#WINDOWS} - for Windows systems</li>
+     *     <li>{@link Platform#UNIX} - for Linux and other Unix-systems</li>
+     * </ul>
+     *
+     * @return the detected {@link Platform} enum value.
+     */
+    public static Platform guessPlatform() {
+        String osName = System.getProperty("os.name").trim().toLowerCase();
+        if (osName.contains("mac")) {
+            return Platform.MAC;
+        } else if (osName.contains("win")) {
+            return Platform.WINDOWS;
+        } else if (osName.contains("nix") || osName.contains("nux") || osName.contains("aix")) {
+            return Platform.UNIX;
+        }
+        return Platform.OTHER;
+    }
 }

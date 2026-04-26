@@ -1,5 +1,7 @@
 package org.plovdev.keyer.utils;
 
+import org.jspecify.annotations.NonNull;
+
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.Linker;
 import java.lang.foreign.SymbolLookup;
@@ -8,6 +10,14 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Utility class providing common operations for native interoperability,
+ * primarily focused on character encoding conversions and native function linking.
+ *
+ * @author Anton
+ * @since 1.0
+ * @version 1.6
+ */
 public final class NativeUtils {
     /**
      * Private constructor to prevent instantiation of this utility class.
@@ -21,7 +31,7 @@ public final class NativeUtils {
     /**
      * Converts a char array to a UTF-8 byte array.
      */
-    public static byte[] charsUTF_8ToBytes(char[] chars) {
+    public static byte @NonNull [] charsUTF_8ToBytes(char[] chars) {
         ByteBuffer bb = StandardCharsets.UTF_8.encode(CharBuffer.wrap(chars));
         byte[] bytes = new byte[bb.remaining()];
         bb.get(bytes);
@@ -31,7 +41,7 @@ public final class NativeUtils {
     /**
      * Converts a UTF-8 byte array to a char array.
      */
-    public static char[] bytesToCharsUTF_8(byte[] bytes) {
+    public static char @NonNull [] bytesToCharsUTF_8(byte[] bytes) {
         CharBuffer cb = StandardCharsets.UTF_8.decode(ByteBuffer.wrap(bytes));
         char[] chars = new char[cb.remaining()];
         cb.get(chars);
@@ -41,7 +51,7 @@ public final class NativeUtils {
     /**
      * Converts a char array to a UTF-16LE byte array.
      */
-    public static byte[] charsUTF_16LEToBytes(char[] chars) {
+    public static byte @NonNull [] charsUTF_16LEToBytes(char[] chars) {
         ByteBuffer bb = StandardCharsets.UTF_16LE.encode(CharBuffer.wrap(chars));
         byte[] bytes = new byte[bb.remaining()];
         bb.get(bytes);
@@ -51,7 +61,7 @@ public final class NativeUtils {
     /**
      * Converts a UTF-16LE byte array to a char array.
      */
-    public static char[] bytesToCharsUTF_16LE(byte[] bytes) {
+    public static char @NonNull [] bytesToCharsUTF_16LE(byte[] bytes) {
         CharBuffer cb = StandardCharsets.UTF_16LE.decode(ByteBuffer.wrap(bytes));
         char[] chars = new char[cb.remaining()];
         cb.get(chars);
@@ -66,7 +76,7 @@ public final class NativeUtils {
      * @return linked MethodHandle
      * @throws java.util.NoSuchElementException if the symbol is not found
      */
-    public static MethodHandle find(SymbolLookup lookup, Linker linker, String name, FunctionDescriptor desc) {
+    public static @NonNull MethodHandle find(@NonNull SymbolLookup lookup, Linker linker, String name, FunctionDescriptor desc) {
         return lookup.find(name).map(s -> linker.downcallHandle(s, desc)).orElseThrow();
     }
 }
