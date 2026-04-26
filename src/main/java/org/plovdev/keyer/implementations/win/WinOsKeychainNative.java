@@ -24,8 +24,8 @@ import static org.plovdev.keyer.utils.NativeUtils.find;
  * generic credentials via CredReadW/CredWriteW/CredDeleteW functions.
  *
  * @author Anton
- * @since 1.0
  * @version 1.6
+ * @since 1.0
  */
 public final class WinOsKeychainNative {
     private static final Logger log = LoggerFactory.getLogger(WinOsKeychainNative.class);
@@ -213,7 +213,7 @@ public final class WinOsKeychainNative {
     private void throwException(int status) {
         switch (status) {
             // not thorw, skip
-            case NOT_FOUND, ALREADY_EXISTS:
+            case 0, NOT_FOUND, ALREADY_EXISTS:
                 break;
             case ACCESS_DENIED:
                 throw new AccessDeniedException(KeyerStatusCode.ACCESS_DENIED);
