@@ -2,10 +2,6 @@ package org.plovdev.keyer;
 
 /**
  * Supported operating system platforms for native keychain access.
- * <p>
- * This enum is used by {@link org.plovdev.keyer.utils.PlatformUtils}
- * and {@link org.plovdev.keyer.Keychain} to determine the appropriate
- * native implementation for secure storage.
  *
  * @author Anton
  * @since 1.0
