@@ -3,6 +3,8 @@ package org.plovdev.keyer.implementations.win;
 import org.plovdev.keyer.AuthorizationMethod;
 import org.plovdev.keyer.Keychain;
 
+import java.util.Set;
+
 /**
  * Windows implementation of the {@link Keychain} interface.
  * <p>
@@ -10,8 +12,8 @@ import org.plovdev.keyer.Keychain;
  * Stores generic credentials using the Windows Vault.
  *
  * @author Anton
- * @since 1.0
  * @version 1.7
+ * @since 1.0
  */
 public class WindowsKeychain implements Keychain {
     /**
@@ -61,7 +63,12 @@ public class WindowsKeychain implements Keychain {
     }
 
     @Override
-    public AuthorizationMethod getAuthorizationMethod() {
+    public AuthorizationMethod currentAuthorizationMethod() {
         return authorizationMethod;
+    }
+
+    @Override
+    public Set<AuthorizationMethod> supportedAuthMethods() {
+        return Set.of();
     }
 }

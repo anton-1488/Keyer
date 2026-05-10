@@ -2,21 +2,20 @@ package org.plovdev.keyer.utils;
 
 import org.jspecify.annotations.NonNull;
 
-import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.Linker;
-import java.lang.foreign.SymbolLookup;
+import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.NoSuchElementException;
 
 /**
  * Utility class providing common operations for native interoperability,
  * primarily focused on character encoding conversions and native function linking.
  *
  * @author Anton
- * @since 1.0
  * @version 1.6
+ * @since 1.0
  */
 public final class NativeUtils {
     /**
@@ -78,5 +77,9 @@ public final class NativeUtils {
      */
     public static @NonNull MethodHandle find(@NonNull SymbolLookup lookup, Linker linker, String name, FunctionDescriptor desc) {
         return lookup.find(name).map(s -> linker.downcallHandle(s, desc)).orElseThrow();
+    }
+
+    public static MemorySegment getConstant(@NonNull SymbolLookup lookup, String name) {
+        return lookup.find(name).orElseThrow(() -> new NoSuchElementException("Symbol not found: " + name)).get(ValueLayout.ADDRESS, 0);
     }
 }

@@ -1,6 +1,8 @@
 package org.plovdev.keyer.implementations.mac;
 
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.plovdev.keyer.AuthorizationMethod;
 import org.plovdev.keyer.exceptions.AccessDeniedException;
 import org.plovdev.keyer.exceptions.KeyerException;
 import org.plovdev.keyer.exceptions.KeyerStatusCode;
@@ -14,6 +16,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import static org.plovdev.keyer.utils.NativeUtils.find;
+import static org.plovdev.keyer.utils.NativeUtils.getConstant;
 
 /**
  * Low-level native bridge for macOS Keychain access.
@@ -47,6 +50,13 @@ public final class MacOsKeychainNative {
     private static final MethodHandle DELETE_PASSWORD = find(SECURITY, LINKER, DELETE_PASSWORD_METHOD_NAME, FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
     private static final MethodHandle CLEAN_PASSWORD = find(SECURITY, LINKER, CLEAN_PASSWORD_METHOD_NAME, FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
     private static final MethodHandle CF_RELEASE = find(SECURITY, LINKER, "CFRelease", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
+    private static final MethodHandle SET_ACCESS_CONTROL = find(SECURITY, LINKER, "SecKeychainItemSetAccessControl", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+
+    private static final MemorySegment ACCESSIBLE = getConstant(SECURITY, "kSecAttrAccessible");
+    private static final MemorySegment ACCESSIBLE_ALWAYS = getConstant(SECURITY, "kSecAttrAccessibleAlways");
+    private static final MemorySegment ACCESSIBLE_WHEN_UNLOCKED = getConstant(SECURITY, "kSecAttrAccessibleWhenUnlockedThisDeviceOnly");
+    private static final MemorySegment ACCESS_CONTROL = getConstant(SECURITY, "kSecAttrAccessControl");
+    private static final MemorySegment USER_PRESENCE = getConstant(SECURITY, "kSecAccessControlUserPresence");
 
     //====ERROR CODES====\\
     private static final int SUCCESS = 0;
@@ -104,9 +114,10 @@ public final class MacOsKeychainNative {
      * @param newPassword password to save
      * @throws RuntimeException if the save operation fails
      */
-    public synchronized void setPassword(String app, String alias, char[] newPassword) {
+    public synchronized void setPassword(String app, String alias, AuthorizationMethod method, char[] newPassword) {
         Objects.requireNonNull(app);
         Objects.requireNonNull(alias);
+        Objects.requireNonNull(method);
         Objects.requireNonNull(newPassword);
 
         byte[] passBytes = NativeUtils.charsUTF_8ToBytes(newPassword);
@@ -119,6 +130,13 @@ public final class MacOsKeychainNative {
             int findStatus = (int) GET_PASSWORD.invokeExact(MemorySegment.NULL, (int) appSegment.byteSize() - 1, appSegment, (int) aliasSegment.byteSize() - 1, aliasSegment, MemorySegment.NULL, MemorySegment.NULL, itemRefPtr);
             MemorySegment itemRef = null;
             int status;
+
+            MemorySegment accessibility = ACCESSIBLE_WHEN_UNLOCKED;
+            MemorySegment accessControl = MemorySegment.NULL;
+            switch (method) {
+                case NONE -> accessibility = ACCESSIBLE_ALWAYS;
+                case BIOMETRY -> accessControl = createAccessControl(arena);
+            }
 
             try {
                 if (findStatus == SUCCESS) {
@@ -136,7 +154,7 @@ public final class MacOsKeychainNative {
                 }
             }
         } catch (Throwable t) {
-            throw new KeyerException("Cann't set password", t);
+            throw new KeyerException("Can't set password", t);
         } finally {
             Arrays.fill(passBytes, (byte) 0);
         }
@@ -190,5 +208,19 @@ public final class MacOsKeychainNative {
             default:
                 throw new KeyerException(String.format("Failed to get password (Code: %d)", status));
         }
+    }
+
+    private @NonNull MemorySegment createAccessControl(@NonNull Arena arena) throws Throwable {
+        var errorPtr = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment result = (MemorySegment) SET_ACCESS_CONTROL.invokeExact(
+                MemorySegment.NULL,
+                ACCESSIBLE_WHEN_UNLOCKED,
+                2L,
+                errorPtr
+        );
+        if (result.address() == 0) {
+            throw new RuntimeException("Failed to create AccessControl");
+        }
+        return result;
     }
 }

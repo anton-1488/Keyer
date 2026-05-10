@@ -3,6 +3,8 @@ package org.plovdev.keyer.implementations.mac;
 import org.plovdev.keyer.AuthorizationMethod;
 import org.plovdev.keyer.Keychain;
 
+import java.util.Set;
+
 /**
  * macOS implementation of the {@link Keychain} interface.
  * <p>
@@ -41,7 +43,7 @@ public class MacKeychain implements Keychain {
      */
     @Override
     public void setPassword(String alias, char[] newPassword) {
-        MAC_OS_KEYCHAIN_NATIVE.setPassword(appId, alias, newPassword);
+        MAC_OS_KEYCHAIN_NATIVE.setPassword(appId, alias, authorizationMethod, newPassword);
     }
 
     /**
@@ -58,7 +60,12 @@ public class MacKeychain implements Keychain {
     }
 
     @Override
-    public AuthorizationMethod getAuthorizationMethod() {
+    public AuthorizationMethod currentAuthorizationMethod() {
         return authorizationMethod;
+    }
+
+    @Override
+    public Set<AuthorizationMethod> supportedAuthMethods() {
+        return Set.of();
     }
 }

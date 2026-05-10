@@ -5,6 +5,8 @@ import org.plovdev.keyer.implementations.mac.MacKeychain;
 import org.plovdev.keyer.implementations.unix.UnixKeychain;
 import org.plovdev.keyer.implementations.win.WindowsKeychain;
 
+import java.util.Set;
+
 /**
  * A unified interface for accessing native system keychains.
  * <p>
@@ -77,5 +79,7 @@ public interface Keychain {
 
     void setAuthorizationMethod(AuthorizationMethod method);
 
-    AuthorizationMethod getAuthorizationMethod();
+    AuthorizationMethod currentAuthorizationMethod();
+
+    Set<AuthorizationMethod> supportedAuthMethods();
 }

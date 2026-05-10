@@ -3,6 +3,8 @@ package org.plovdev.keyer.implementations.unix;
 import org.plovdev.keyer.AuthorizationMethod;
 import org.plovdev.keyer.Keychain;
 
+import java.util.Set;
+
 /**
  * Unix implementation of the {@link Keychain} interface.
  * <p>
@@ -19,7 +21,7 @@ public class UnixKeychain implements Keychain {
     private static final UnixOsKeychainNative UNIX_OS_KEYCHAIN_NATIVE = new UnixOsKeychainNative();
 
     private final String appId;
-    private volatile AuthorizationMethod authorizationMethod = AuthorizationMethod.NONE;
+    private final AuthorizationMethod authorizationMethod = AuthorizationMethod.NONE;
 
     /**
      * Constructs a UnixKeychain instance.
@@ -66,11 +68,16 @@ public class UnixKeychain implements Keychain {
 
     @Override
     public synchronized void setAuthorizationMethod(AuthorizationMethod method) {
-        this.authorizationMethod = method;
+        throw new UnsupportedOperationException("Unix-systems not supported this operation");
     }
 
     @Override
-    public AuthorizationMethod getAuthorizationMethod() {
+    public AuthorizationMethod currentAuthorizationMethod() {
         return authorizationMethod;
+    }
+
+    @Override
+    public Set<AuthorizationMethod> supportedAuthMethods() {
+        return Set.of(AuthorizationMethod.NONE);
     }
 }
